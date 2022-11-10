@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:9.4-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: polvinho
+      POSTGRES_USER: polvinho
+      POSTGRES_PASSWORD: polvinho
