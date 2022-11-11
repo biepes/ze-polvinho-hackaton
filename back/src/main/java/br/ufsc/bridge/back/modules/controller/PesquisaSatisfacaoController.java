@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.ufsc.bridge.back.modules.model.GrauAvaliacaoDto;
+import br.ufsc.bridge.back.modules.model.PesquisaResultDto;
 import br.ufsc.bridge.back.modules.model.PesquisaSatisfacao;
 import br.ufsc.bridge.back.modules.repository.PesquisaSatisfacaoRepository;
 
@@ -24,13 +25,15 @@ public class PesquisaSatisfacaoController {
 	private final PesquisaSatisfacaoRepository pesquisaSatisfacaoRepository;
 
 	@GetMapping("avaliacoes")
-	public Map<String, List<GrauAvaliacaoDto>> getMapAvaliacoes() {
-		return this.pesquisaSatisfacaoRepository.groupByLastnameAnd()
+	public List<PesquisaResultDto> getMapAvaliacoes() {
+		var mapAvaliacoes =  this.pesquisaSatisfacaoRepository.groupByLastnameAnd()
 				.stream()
 				.collect(Collectors
 						.groupingBy(pesquisaSatisfacaoGroupDto-> pesquisaSatisfacaoGroupDto.getKey().getVersao(),
 								Collectors.mapping(pesquisaSatisfacaoGroupDto ->
 										new GrauAvaliacaoDto(pesquisaSatisfacaoGroupDto.getKey().getGrauSatisfacao(), pesquisaSatisfacaoGroupDto.getQuantidade()), Collectors.toList())));
+
+		return mapAvaliacoes.keySet().stream().map(s -> new PesquisaResultDto(s, mapAvaliacoes.get(s))).toList();
 	}
 
 	@GetMapping
