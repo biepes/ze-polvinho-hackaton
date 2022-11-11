@@ -2,9 +2,20 @@ import { PagedTable, Text } from "bold-ui";
 
 interface ObservacaoTableProps {
   rows: GrauSatisfacaoObservacoes[];
+  pageable;
+  pageChange;
+  sizeChange;
+  totalPages;
+  totalElements;
 }
 
-interface GrauSatisfacaoObservacoes {
+export interface PageProps {
+  totalPages: number;
+  totalElements: number;
+  content: GrauSatisfacaoObservacoes[];
+}
+
+export interface GrauSatisfacaoObservacoes {
   grauSatisfacao: string;
   observacao: string;
 }
@@ -12,12 +23,12 @@ interface GrauSatisfacaoObservacoes {
 export function ObservacaoTable(props: ObservacaoTableProps) {
   return (
     <PagedTable<GrauSatisfacaoObservacoes>
-      page={1}
-      size={10}
-      totalPages={2}
-      totalElements={18}
-      onPageChange={() => {}}
-      onSizeChange={() => {}}
+      page={props.pageable.page}
+      size={props.pageable.size}
+      totalPages={props.totalPages}
+      totalElements={props.totalElements}
+      onPageChange={props.pageChange}
+      onSizeChange={props.sizeChange}
       rows={props.rows}
       columns={[
         {

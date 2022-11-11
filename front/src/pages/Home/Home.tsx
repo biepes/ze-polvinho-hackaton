@@ -1,14 +1,16 @@
 import { Heading, Paper, Select, VFlow } from "bold-ui";
 import Chart from "components/PizzaChart/PizzaChart";
-import { ObservacaoTable } from "components/Table/ObservacaoTable";
+import { GrauSatisfacaoObservacoes } from "components/Table/ObservacaoTable";
 import { useEffect, useState } from "react";
 import { getData } from "service/LoadData";
 
-enum GrauSatisfacao {
-  Bom = 1,
-  Medio = 2,
-  Ruim = 3,
-}
+const grau = {
+  MUITO_SATISFEITO: 5,
+  SATISFEITO: 4,
+  INDIFERENTE: 3,
+  INSATISFEITO: 2,
+  MUITO_INSATISFEITO: 1,
+};
 
 export interface Versao {
   id: number;
@@ -16,12 +18,12 @@ export interface Versao {
 }
 
 export interface Satisfaction {
-  versao: Versao;
+  versao: string;
   data: Avaliacoes[];
 }
 
 interface Avaliacoes {
-  grauAvaliacao: number;
+  grauSatisfacao: string;
   quantidade: number;
 }
 
@@ -29,7 +31,25 @@ const calculaMedia = (satisfaction: Satisfaction): number => {
   var sum = 0;
   var qtd = 0;
   satisfaction.data.forEach((item) => {
-    sum += item.grauAvaliacao * item.quantidade;
+    var a;
+    switch (item.grauSatisfacao) {
+      case "MUITO_SATISFEITO":
+        a = 5;
+        break;
+      case "SATISFEITO":
+        a = 4;
+        break;
+      case "INDIFERENTE":
+        a = 3;
+        break;
+      case "INSATISFEITO":
+        a = 2;
+        break;
+      case "MUITO_INSATISFEITO":
+        a = 1;
+        break;
+    }
+    sum += a * item.quantidade;
     qtd += item.quantidade;
   });
   return sum / qtd;
@@ -40,7 +60,7 @@ const configBar = (satisfaction: Satisfaction[]) => {
     {
       data: satisfaction.map((sat) => {
         return {
-          name: sat.versao.descricao,
+          name: sat.versao,
           y: calculaMedia(sat),
         };
       }),
@@ -71,16 +91,17 @@ const configBar = (satisfaction: Satisfaction[]) => {
 
 const configPizza = (
   satisfaction: Satisfaction[] | undefined,
-  version: number
+  version: string
 ) => {
   var series = [
     {
       name: "teste",
       data: satisfaction
-        ?.find((sats) => sats.versao.id === version)
+        ?.find((sats) => sats.versao === version)
         ?.data.map((sats) => {
+          console.log(sats);
           return {
-            name: sats.grauAvaliacao,
+            name: sats.grauSatisfacao,
             y: sats.quantidade,
           };
         }),
@@ -128,60 +149,68 @@ const configPizza = (
 };
 
 const Home = () => {
+  const [data, setData] = useState<Satisfaction[]>();
+  const [tableData, setTableData] = useState<GrauSatisfacaoObservacoes[]>([
+    { grauSatisfacao: "bom", observacao: "aaaa" },
+    { grauSatisfacao: "ruim", observacao: "bbb" },
+  ]);
+  const [totalPages, setTotalPages] = useState({});
+
   const [optionsPizza, setOptionsPizza] = useState({});
   const [optionsBar, setOptionsBar] = useState({});
   const [labelTotalAvaliacoes, setLabelTotalAvaliacoes] = useState(String);
-  const [versoes, setVersoes] = useState<Versao[]>([]);
-  const [versao, setVersao] = useState<number>(0);
-  const [data, setData] = useState<Satisfaction[]>();
+  const [versoes, setVersoes] = useState<string[]>([]);
+  const [versao, setVersao] = useState<string>("v1");
+
+  const [pageable, setPageable] = useState({
+    page: 1,
+    size: 10,
+  });
 
   useEffect(() => {
-    getData()
-      .then((response) => {
-        setData(response);
-        setOptionsPizza(configPizza(response, versao));
-        setOptionsBar(configBar(response));
-      })
-      .catch(() => {
-        // Fallback enquanto não tem back
-        const test = [
-          {
-            versao: { id: 0, descricao: "v1" },
-            data: [
-              { grauAvaliacao: 1, quantidade: 100 },
-              { grauAvaliacao: 2, quantidade: 101 },
-              { grauAvaliacao: 3, quantidade: 99 },
-            ],
-          },
-          {
-            versao: { id: 1, descricao: "v2" },
-            data: [
-              { grauAvaliacao: 1, quantidade: 999 },
-              { grauAvaliacao: 2, quantidade: 1000 },
-              { grauAvaliacao: 3, quantidade: 500 },
-            ],
-          },
-          {
-            versao: { id: 2, descricao: "v3" },
-            data: [
-              { grauAvaliacao: 1, quantidade: 50 },
-              { grauAvaliacao: 2, quantidade: 500 },
-              { grauAvaliacao: 3, quantidade: 25 },
-            ],
-          },
-        ];
-        setData(test);
-        setVersoes([
-          { id: 0, descricao: "v1" },
-          { id: 1, descricao: "v2" },
-          { id: 2, descricao: "v3" },
-        ]);
-        setVersao(0);
-        setLabelTotalAvaliacoes("Total de avaliações 10.000 avaliações");
-        setOptionsPizza(configPizza(test, 0));
-        setOptionsBar(configBar(test));
-      });
+    getData().then((response) => {
+      setData(response.data);
+      setVersoes(response.data.map((dt) => dt.versao));
+      setVersao(response.data[0].versao);
+      setOptionsPizza(configPizza(response.data, response.data[0].versao));
+
+      setOptionsBar(configBar(response.data));
+    });
   }, []);
+
+  // useEffect(() => {
+  //   getAvaliacoes(pageable)
+  //     .then((response) => {
+  //       setTableData(response);
+  //     })
+  //     .catch(() => {
+  //       // Fallback enquanto não tem back
+  //     });
+  // }, []);
+
+  // const onPageChange = (num) => {
+  //   var pageab = { ...pageable, page: num };
+  //   setPageable(pageab);
+  //   getAvaliacoes(pageab)
+  //     .then((response) => {
+  //       setTableData(response);
+  //     })
+  //     .catch(() => {
+  //       // Fallback enquanto não tem back
+  //     });
+  // };
+
+  // const onSizeChange = (size) => {
+  //   var pageab = { ...pageable, size: size, page: 0 };
+  //   setPageable(pageab);
+  //   getAvaliacoes(pageab)
+  //     .then((response) => {
+  //       setTableData(response);
+  //     })
+  //     .catch(() => {
+  //       // Fallback enquanto não tem back
+  //     });
+  // };
 
   return (
     <VFlow style={{ backgroundColor: "#D3D4DD" }}>
@@ -211,12 +240,12 @@ const Home = () => {
           <Select
             label="Versão"
             style={{ width: "250px" }}
-            itemToString={(item) => item?.descricao || ""}
+            itemToString={(item) => item || ""}
             items={versoes}
             menuMinWidth={250}
-            value={versoes.filter((vers) => vers.id === versao)}
-            onChange={(item: Versao) => {
-              setOptionsPizza(configPizza(data, item.id));
+            value={versoes.filter((vers) => vers === versao)}
+            onChange={(item: string) => {
+              setOptionsPizza(configPizza(data, item));
             }}
           />
           <Heading style={{ marginTop: "2em" }} level={3}>
@@ -231,6 +260,15 @@ const Home = () => {
           >
             {labelTotalAvaliacoes}
           </Heading>
+
+          {/* <ObservacaoTable
+            rows={tableData}
+            pageable={pageable}
+            totalElements={totalElements}
+            totalPages={totalPages}
+            pageChange={onPageChange}
+            sizeChange={onSizeChange}
+          /> */}
         </div>
       </Paper>
     </VFlow>
