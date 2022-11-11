@@ -1,5 +1,6 @@
 import { Cell, Grid, Heading, VFlow } from "bold-ui";
 import Chart from "components/PizzaChart/PizzaChart";
+import { ObservacaoTable } from "components/Table/ObservacaoTable";
 import { useEffect, useState } from "react";
 import { getData } from "service/LoadData";
 
@@ -172,6 +173,12 @@ const Home = () => {
           <Chart options={optionsBar} />
         </Cell>
       </Grid>
+      <ObservacaoTable
+        rows={[
+          { grauSatisfacao: "bom", observacao: "aaaa" },
+          { grauSatisfacao: "ruim", observacao: "bbb" },
+        ]}
+      />
     </VFlow>
   );
 };
