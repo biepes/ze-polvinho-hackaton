@@ -5,8 +5,6 @@ interface ObservacaoTableProps {
   pageable;
   pageChange;
   sizeChange;
-  totalPages;
-  totalElements;
 }
 
 export interface PageProps {
@@ -18,15 +16,16 @@ export interface PageProps {
 export interface GrauSatisfacaoObservacoes {
   grauSatisfacao: string;
   observacao: string;
+  versao: string;
 }
 
 export function ObservacaoTable(props: ObservacaoTableProps) {
   return (
     <PagedTable<GrauSatisfacaoObservacoes>
-      page={props.pageable.page}
-      size={props.pageable.size}
-      totalPages={props.totalPages}
-      totalElements={props.totalElements}
+      page={1}
+      size={100}
+      totalPages={100}
+      totalElements={100}
       onPageChange={props.pageChange}
       onSizeChange={props.sizeChange}
       rows={props.rows}
@@ -41,6 +40,12 @@ export function ObservacaoTable(props: ObservacaoTableProps) {
           header: "Observação",
           name: "observacao",
           render: (value) => <Text component="p">{value.observacao}</Text>,
+        },
+        {
+          header: "Versao",
+          name: "versao",
+          render: (value) => <Text component="p">{value.versao}</Text>,
+          style: { width: "6rem" },
         },
       ]}
     />

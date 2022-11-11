@@ -1,16 +1,11 @@
 import { Heading, Paper, Select, VFlow } from "bold-ui";
 import Chart from "components/PizzaChart/PizzaChart";
-import { GrauSatisfacaoObservacoes } from "components/Table/ObservacaoTable";
+import {
+  GrauSatisfacaoObservacoes,
+  ObservacaoTable,
+} from "components/Table/ObservacaoTable";
 import { useEffect, useState } from "react";
-import { getData } from "service/LoadData";
-
-const grau = {
-  MUITO_SATISFEITO: 5,
-  SATISFEITO: 4,
-  INDIFERENTE: 3,
-  INSATISFEITO: 2,
-  MUITO_INSATISFEITO: 1,
-};
+import { getAvaliacoes, getData } from "service/LoadData";
 
 export interface Versao {
   id: number;
@@ -150,10 +145,7 @@ const configPizza = (
 
 const Home = () => {
   const [data, setData] = useState<Satisfaction[]>();
-  const [tableData, setTableData] = useState<GrauSatisfacaoObservacoes[]>([
-    { grauSatisfacao: "bom", observacao: "aaaa" },
-    { grauSatisfacao: "ruim", observacao: "bbb" },
-  ]);
+  const [tableData, setTableData] = useState<GrauSatisfacaoObservacoes[]>([]);
   const [totalPages, setTotalPages] = useState({});
 
   const [optionsPizza, setOptionsPizza] = useState({});
@@ -178,15 +170,17 @@ const Home = () => {
     });
   }, []);
 
-  // useEffect(() => {
-  //   getAvaliacoes(pageable)
-  //     .then((response) => {
-  //       setTableData(response);
-  //     })
-  //     .catch(() => {
-  //       // Fallback enquanto não tem back
-  //     });
-  // }, []);
+  useEffect(() => {
+    getAvaliacoes(pageable)
+      .then((response) => {
+        console.log(response.data.content);
+        var a = response.data.content.filter((x) => x.grauSatisfacao != null);
+        setTableData(a);
+      })
+      .catch(() => {
+        // Fallback enquanto não tem back
+      });
+  }, []);
 
   // const onPageChange = (num) => {
   //   var pageab = { ...pageable, page: num };
@@ -261,14 +255,12 @@ const Home = () => {
             {labelTotalAvaliacoes}
           </Heading>
 
-          {/* <ObservacaoTable
+          <ObservacaoTable
             rows={tableData}
             pageable={pageable}
-            totalElements={totalElements}
-            totalPages={totalPages}
-            pageChange={onPageChange}
-            sizeChange={onSizeChange}
-          /> */}
+            pageChange={() => {}}
+            sizeChange={() => {}}
+          />
         </div>
       </Paper>
     </VFlow>
