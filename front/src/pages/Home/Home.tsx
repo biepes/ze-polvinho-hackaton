@@ -3,44 +3,73 @@ import Chart from "components/PizzaChart/PizzaChart";
 import { useEffect, useState } from "react";
 import { getData } from "service/LoadData";
 
-const optionsBarGraph = {
-  chart: {
-    type: "column",
-  },
-  title: {
-    text: "",
-  },
-  credits: {
-    enabled: false,
-  },
-  plotOptions: {
-    pie: {
-      allowPointSelect: true,
-      cursor: "pointer",
-      dataLabels: {
-        enabled: false,
-        useHTML: true,
-        format: "<span style='color: {point.color}'>{point.name}</span>",
-      },
-    },
-  },
-};
+const grauSatisfacao = new Map([
+  ["Bom", 3], // default
+  ["Medio", 2],
+  ["Ruim", 1],
+]);
 
 export interface Satisfaction {
   versao: string;
-  data: [
-    {
-      grauAvaliacao: string;
-      quantidade: number;
-    }
-  ];
+  data: Avaliacoes[];
 }
 
-const configPizza = (satisfaction: Satisfaction) => {
+interface Avaliacoes {
+  grauAvaliacao: string;
+  quantidade: number;
+}
+
+const calculaMedia = (satisfaction: Satisfaction): number => {
+  var sum = 0;
+  var qtd = 0;
+  satisfaction.data.forEach((item) => {
+    sum += grauSatisfacao[item.grauAvaliacao] * item.quantidade;
+    qtd += item.quantidade;
+  });
+  console.log(sum);
+  console.log(qtd);
+  return sum / qtd;
+};
+
+const configBar = (satisfaction: Satisfaction[]) => {
+  var series = [
+    {
+      data: satisfaction.forEach((sat) => {
+        return {
+          name: sat.versao,
+          y: calculaMedia(sat),
+        };
+      }),
+    },
+  ];
+  return {
+    chart: {
+      type: "column",
+    },
+    title: {
+      text: "",
+    },
+    credits: {
+      enabled: false,
+    },
+    plotOptions: {
+      pie: {
+        allowPointSelect: true,
+        cursor: "pointer",
+        dataLabels: {
+          enabled: false,
+        },
+      },
+    },
+    series: series,
+  };
+};
+
+const configPizza = (satisfaction: Satisfaction[]) => {
   var series = [
     {
       name: "teste",
-      data: satisfaction.data.map((sats) => {
+      data: satisfaction[0].data.map((sats) => {
         return {
           name: sats.grauAvaliacao,
           y: sats.quantidade,
@@ -65,6 +94,8 @@ const configPizza = (satisfaction: Satisfaction) => {
         cursor: "pointer",
         dataLabels: {
           enabled: false,
+          useHTML: true,
+          format: "<span style='color: {point.color}'>{point.name}</span>",
         },
         showInLegend: true,
       },
@@ -91,12 +122,30 @@ const Home = () => {
   const nameDashboard = "Grau de satisfação da versão 5.0";
 
   const [optionsPizza, setOptionsPizza] = useState({});
+  const [optionsBar, setOptionsBar] = useState({});
 
   useEffect(() => {
-    getData().then((response) => {
-      setOptionsPizza(configPizza(response));
-    });
-  });
+    getData()
+      .then((response) => {
+        setOptionsPizza(configPizza(response));
+        setOptionsBar(configBar(response));
+      })
+      .catch(() => {
+        // Fallback enquanto não tem back
+        const test = [
+          {
+            versao: "5.1",
+            data: [
+              { grauAvaliacao: "Bom", quantidade: 100 },
+              { grauAvaliacao: "Medio", quantidade: 101 },
+              { grauAvaliacao: "Ruim", quantidade: 99 },
+            ],
+          },
+        ];
+        setOptionsPizza(configPizza(test));
+        setOptionsBar(configBar(test));
+      });
+  }, []);
 
   return (
     <VFlow>
@@ -120,7 +169,7 @@ const Home = () => {
         </Cell>
         <Cell size={3}></Cell>
         <Cell>
-          <Chart options={optionsBarGraph} />
+          <Chart options={optionsBar} />
         </Cell>
       </Grid>
     </VFlow>
