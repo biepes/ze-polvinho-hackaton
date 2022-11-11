@@ -6,13 +6,10 @@ export default function BasicExample() {
   return (
     <Router>
       <div>
-        <Header/>
-
+        <Header />
         <Switch>
           <Route exact path="/">
-            <div style={{ padding: "16px" }}>
-              <Home />
-            </div>
+            <Home />
           </Route>
         </Switch>
       </div>

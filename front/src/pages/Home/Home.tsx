@@ -1,21 +1,26 @@
-import { Cell, Grid, Heading, VFlow } from "bold-ui";
+import { Heading, Paper, Select, VFlow } from "bold-ui";
 import Chart from "components/PizzaChart/PizzaChart";
 import { useEffect, useState } from "react";
 import { getData } from "service/LoadData";
 
-const grauSatisfacao = new Map([
-  ["Bom", 3], // default
-  ["Medio", 2],
-  ["Ruim", 1],
-]);
+enum GrauSatisfacao {
+  Bom = 1,
+  Medio = 2,
+  Ruim = 3,
+}
+
+export interface Versao {
+  id: number;
+  descricao: string;
+}
 
 export interface Satisfaction {
-  versao: string;
+  versao: Versao;
   data: Avaliacoes[];
 }
 
 interface Avaliacoes {
-  grauAvaliacao: string;
+  grauAvaliacao: number;
   quantidade: number;
 }
 
@@ -23,20 +28,18 @@ const calculaMedia = (satisfaction: Satisfaction): number => {
   var sum = 0;
   var qtd = 0;
   satisfaction.data.forEach((item) => {
-    sum += grauSatisfacao[item.grauAvaliacao] * item.quantidade;
+    sum += item.grauAvaliacao * item.quantidade;
     qtd += item.quantidade;
   });
-  console.log(sum);
-  console.log(qtd);
   return sum / qtd;
 };
 
 const configBar = (satisfaction: Satisfaction[]) => {
   var series = [
     {
-      data: satisfaction.forEach((sat) => {
+      data: satisfaction.map((sat) => {
         return {
-          name: sat.versao,
+          name: sat.versao.descricao,
           y: calculaMedia(sat),
         };
       }),
@@ -65,16 +68,21 @@ const configBar = (satisfaction: Satisfaction[]) => {
   };
 };
 
-const configPizza = (satisfaction: Satisfaction[]) => {
+const configPizza = (
+  satisfaction: Satisfaction[] | undefined,
+  version: number
+) => {
   var series = [
     {
       name: "teste",
-      data: satisfaction[0].data.map((sats) => {
-        return {
-          name: sats.grauAvaliacao,
-          y: sats.quantidade,
-        };
-      }),
+      data: satisfaction
+        ?.find((sats) => sats.versao.id === version)
+        ?.data.map((sats) => {
+          return {
+            name: sats.grauAvaliacao,
+            y: sats.quantidade,
+          };
+        }),
     },
   ];
 
@@ -119,59 +127,111 @@ const configPizza = (satisfaction: Satisfaction[]) => {
 };
 
 const Home = () => {
-  const nameDashboard = "Grau de satisfação da versão 5.0";
-
   const [optionsPizza, setOptionsPizza] = useState({});
   const [optionsBar, setOptionsBar] = useState({});
+  const [labelTotalAvaliacoes, setLabelTotalAvaliacoes] = useState(String);
+  const [versoes, setVersoes] = useState<Versao[]>([]);
+  const [versao, setVersao] = useState<number>(0);
+  const [data, setData] = useState<Satisfaction[]>();
 
   useEffect(() => {
     getData()
       .then((response) => {
-        setOptionsPizza(configPizza(response));
+        setData(response);
+        setOptionsPizza(configPizza(response, versao));
         setOptionsBar(configBar(response));
       })
       .catch(() => {
         // Fallback enquanto não tem back
         const test = [
           {
-            versao: "5.1",
+            versao: { id: 0, descricao: "v1" },
             data: [
-              { grauAvaliacao: "Bom", quantidade: 100 },
-              { grauAvaliacao: "Medio", quantidade: 101 },
-              { grauAvaliacao: "Ruim", quantidade: 99 },
+              { grauAvaliacao: 1, quantidade: 100 },
+              { grauAvaliacao: 2, quantidade: 101 },
+              { grauAvaliacao: 3, quantidade: 99 },
+            ],
+          },
+          {
+            versao: { id: 1, descricao: "v2" },
+            data: [
+              { grauAvaliacao: 1, quantidade: 999 },
+              { grauAvaliacao: 2, quantidade: 1000 },
+              { grauAvaliacao: 3, quantidade: 500 },
+            ],
+          },
+          {
+            versao: { id: 2, descricao: "v3" },
+            data: [
+              { grauAvaliacao: 1, quantidade: 50 },
+              { grauAvaliacao: 2, quantidade: 500 },
+              { grauAvaliacao: 3, quantidade: 25 },
             ],
           },
         ];
-        setOptionsPizza(configPizza(test));
+        setData(test);
+        setVersoes([
+          { id: 0, descricao: "v1" },
+          { id: 1, descricao: "v2" },
+          { id: 2, descricao: "v3" },
+        ]);
+        setVersao(0);
+        setLabelTotalAvaliacoes("Total de avaliações 10.000 avaliações");
+        setOptionsPizza(configPizza(test, 0));
         setOptionsBar(configBar(test));
       });
   }, []);
 
   return (
-    <VFlow>
-      <Grid>
-        <Cell>
-          <Heading level={1}>DashBoard</Heading>
-        </Cell>
-      </Grid>
-      <Grid>
-        <Cell size={6}>
-          <Heading level={2}>{nameDashboard}</Heading>
-        </Cell>
-        {/* add divider */}
-        <Cell>
-          <Heading level={2}>Nota média por versão</Heading>
-        </Cell>
-      </Grid>
-      <Grid>
-        <Cell size={3}>
-          <Chart options={optionsPizza} />
-        </Cell>
-        <Cell size={3}></Cell>
-        <Cell>
+    <VFlow style={{ backgroundColor: "#D3D4DD" }}>
+      <Paper
+        elevation={20}
+        style={{
+          margin: "48px 64px",
+          backgroundColor: "#FFFFFF",
+        }}
+      >
+        <div style={{ padding: "1em" }}>
+          <Heading style={{ marginTop: "0px" }} level={2}>
+            Nota média por versão
+          </Heading>
           <Chart options={optionsBar} />
-        </Cell>
-      </Grid>
+        </div>
+      </Paper>
+
+      <Paper
+        elevation={20}
+        style={{
+          margin: "48px 64px",
+          backgroundColor: "#FFFFFF",
+        }}
+      >
+        <div style={{ padding: "1em" }}>
+          <Select
+            label="Versão"
+            style={{ width: "250px" }}
+            itemToString={(item) => item?.descricao || ""}
+            items={versoes}
+            menuMinWidth={250}
+            value={versoes.filter((vers) => vers.id === versao)}
+            onChange={(item: Versao) => {
+              setOptionsPizza(configPizza(data, item.id));
+            }}
+          />
+          <Heading style={{ marginTop: "2em" }} level={3}>
+            Grau de satisfação da versão
+          </Heading>
+          <div style={{ width: "50%" }}>
+            <Chart options={optionsPizza} />
+          </div>
+          <Heading
+            style={{ marginTop: "0px", width: "45%", textAlign: "center" }}
+            level={4}
+          >
+            {labelTotalAvaliacoes}
+          </Heading>
+        </div>
+      </Paper>
     </VFlow>
   );
 };
