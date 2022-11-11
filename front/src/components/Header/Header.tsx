@@ -30,7 +30,13 @@ function Header() {
           Zé Polvinho
         </h1>
       </HFlow>
-      <Heading level={1}>B_eye Dashboard</Heading>
+      <div style = {
+        {
+          paddingLeft: '40px'
+        }
+      }>
+      <Heading level={1}
+      >B_eye</Heading> </div>
     </>
   );
 }
