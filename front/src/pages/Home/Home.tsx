@@ -1,5 +1,6 @@
 import { Heading, Paper, Select, VFlow } from "bold-ui";
 import Chart from "components/PizzaChart/PizzaChart";
+import { ObservacaoTable } from "components/Table/ObservacaoTable";
 import { useEffect, useState } from "react";
 import { getData } from "service/LoadData";
 
