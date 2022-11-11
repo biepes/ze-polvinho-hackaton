@@ -15,7 +15,7 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
-
+data
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
