@@ -36,7 +36,7 @@ function Header() {
         }
       }>
       <Heading level={1}
-      >B_eye</Heading> </div>
+      >b_eye</Heading> </div>
     </>
   );
 }
