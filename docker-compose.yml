@@ -1,13 +1,27 @@
 version: "3"
 
 services:
-  postgres:
-    container_name: postgres
-    image: postgres:9.4-alpine
-    restart: always
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: unless-stopped
+    environment: # set required env variables to access mongo
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
     ports:
-      - "5432:5432"
+      - 27017:27017
+    volumes:
+      - "./data:/data/db"
+
+  # Mongo Express Service
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - 8081:8081
     environment:
-      POSTGRES_DB: polvinho
-      POSTGRES_USER: polvinho
-      POSTGRES_PASSWORD: polvinho
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      # use the name of the mongo container above for server env var.
